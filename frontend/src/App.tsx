@@ -94,27 +94,46 @@ ${response.next_steps}
         body: JSON.stringify({ message: inputValue })
       });
 
+      console.log('Response status:', res.status);
+      console.log('Response headers:', [...res.headers.entries()]);
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to get response');
+        const errorText = await res.text();
+        console.error('Error response text:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || 'Failed to get response');
+        } catch (parseError) {
+          throw new Error(`HTTP ${res.status}: ${errorText || 'Unknown error'}`);
+        }
       }
 
-      const data: BotResponse = await res.json();
+      const responseText = await res.text();
+      console.log('Response text:', responseText);
       
-      // Add bot response
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: formatBotResponse(data),
-        sender: 'bot',
-        timestamp: new Date()
-      };
+      try {
+        const data: BotResponse = JSON.parse(responseText);
+        
+        // Add bot response
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: formatBotResponse(data),
+          sender: 'bot',
+          timestamp: new Date()
+        };
 
-      setMessages((prev: Message[]) => [...prev, botMessage]);
+        setMessages((prev: Message[]) => [...prev, botMessage]);
+      } catch (parseError: any) {
+        console.error('JSON parsing error:', parseError);
+        console.error('Response that failed to parse:', responseText);
+        throw new Error(`Invalid response format: ${parseError.message || parseError}`);
+      }
     } catch (error: any) {
+      console.error('API call error:', error);
       // Add error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: error.message || 'Sorry, I encountered an error. Please try again.',
+        text: `Error: ${error.message || 'Sorry, I encountered an error. Please try again.'}`,
         sender: 'bot',
         timestamp: new Date()
       };
