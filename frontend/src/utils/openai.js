@@ -22,7 +22,7 @@ Always include a disclaimer advising professional consultation.`;
 // Function to get response from OpenAI
 const getOpenAIResponse = async (userMessage) => {
   if (!openai) {
-    throw new Error('OpenAI API key not configured');
+    throw new Error('OpenAI API key not configured - falling back to rule-based responses');
   }
 
   try {

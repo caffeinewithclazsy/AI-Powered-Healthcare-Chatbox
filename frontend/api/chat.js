@@ -108,10 +108,12 @@ export default async function handler(req, res) {
       }
     };
 
-    // Use OpenAI if API key is configured, otherwise use rule-based responses
+    // Try to use OpenAI if API key is configured, otherwise use rule-based responses
     if (hasOpenAIKey) {
       try {
+        console.log('Attempting to use OpenAI API');
         const aiResponse = await getOpenAIResponse(message);
+        console.log('OpenAI response received:', aiResponse);
         
         // Add disclaimer to AI response
         const disclaimer = "\n\nDISCLAIMER: This advice is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.";
@@ -123,7 +125,10 @@ export default async function handler(req, res) {
       } catch (aiError) {
         console.error('OpenAI error:', aiError.message);
         // Fall back to rule-based responses if OpenAI fails
+        console.log('Falling back to rule-based responses');
       }
+    } else {
+      console.log('OpenAI API key not configured, using rule-based responses');
     }
     
     // Enhanced HLL-style conversational matching
@@ -150,6 +155,14 @@ export default async function handler(req, res) {
         home_remedies: ["Share your health concerns", "Learn about symptoms", "Understand wellness options"],
         red_flags: ["None at this moment"],
         next_steps: "Please describe your health concerns in more detail. For example, you can tell me about specific symptoms you're experiencing, when they started, or what makes them better or worse."
+      });
+    } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+      return res.status(200).json({
+        causes: "Hello there! I'm glad you reached out. I'm here to assist you with health information in a safe and informative way.",
+        medicine_categories: ["none needed"],
+        home_remedies: ["Welcome to our health conversation", "Share your concerns openly", "Ask questions freely"],
+        red_flags: ["None at this moment"],
+        next_steps: "Tell me about what's been bothering you lately. For example, you might say 'I've been having some troubling symptoms' or 'I'd like to know about this pain I've been experiencing.'"
       });
     }
 
