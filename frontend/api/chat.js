@@ -1,5 +1,4 @@
 // Vercel API route for chat functionality
-import { getOpenAIResponse, hasOpenAIKey } from '../src/utils/openai';
 
 // Safety middleware function
 const safetyCheck = (message) => {
@@ -108,29 +107,6 @@ export default async function handler(req, res) {
       }
     };
 
-    // Try to use OpenAI if API key is configured, otherwise use rule-based responses
-    if (hasOpenAIKey) {
-      try {
-        console.log('Attempting to use OpenAI API');
-        const aiResponse = await getOpenAIResponse(message);
-        console.log('OpenAI response received:', aiResponse);
-        
-        // Add disclaimer to AI response
-        const disclaimer = "\n\nDISCLAIMER: This advice is for informational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition.";
-        
-        return res.status(200).json({
-          ...aiResponse,
-          next_steps: aiResponse.next_steps + disclaimer
-        });
-      } catch (aiError) {
-        console.error('OpenAI error:', aiError.message);
-        // Fall back to rule-based responses if OpenAI fails
-        console.log('Falling back to rule-based responses');
-      }
-    } else {
-      console.log('OpenAI API key not configured, using rule-based responses');
-    }
-    
     // Enhanced HLL-style conversational matching
     let responseKey = 'default';
     
